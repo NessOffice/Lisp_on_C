@@ -18,7 +18,7 @@ char *readline(char *prompt) {
 
 int println(const char *fmt, ...)
 {
-    char printf_buf[MAX_BUFFER_SIZE];
+    static char printf_buf[MAX_BUFFER_SIZE];
     va_list args;
     int printed;
     va_start(args, fmt);

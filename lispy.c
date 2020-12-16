@@ -1,20 +1,40 @@
 /* --------------------------------------------
 ** Environment: Windows
 ** Author: Ness
-** Date: 2020/12/16 11:31
-** Progress: Chapter6
+** Date: 2020/12/16 12:16
+** Progress: Chapter 7
 ** Testcases:
-**     + 5 (* 2 2)
-**     hello
-**     / 1dog
+**     + 5 6
+**     - (* 10 10) (+ 1 1 1)
 -------------------------------------------- */
-const char *lispy_version = "0.0.0.0.2";
+const char *lispy_version = "0.0.0.0.3";
 
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
 #include "libs/mpc.h"
 #include "util.c"
+
+long eval_op(char *op, long x, long y) {
+    if(strcmp(op, "+") == 0) {return x + y;}
+    if(strcmp(op, "-") == 0) {return x - y;}
+    if(strcmp(op, "*") == 0) {return x * y;}
+    if(strcmp(op, "/") == 0) {return x / y;}
+    return 0;
+}
+
+long eval(mpc_ast_t *t) {
+    if(strstr(t->tag, "number")) {
+        return atoi(t->contents);
+    }
+    /* The operator is always second child. */
+    char* op = t->children[1]->contents;
+    long x = eval(t->children[2]);
+    for(int i = 3;strstr(t->children[i]->tag, "expr");i++) {
+        x = eval_op(op, x, eval(t->children[i]));
+    }
+    return x;
+}
 
 int main() {
     mpc_parser_t* Number   = mpc_new("number");
@@ -39,7 +59,7 @@ int main() {
 
         mpc_result_t r;
         if(mpc_parse("<stdin>", input, Lispy, &r)) {
-            mpc_ast_print(r.output);
+            println("%li", eval(r.output));
             mpc_ast_delete(r.output);
         } else {
             mpc_err_print(r.error);
