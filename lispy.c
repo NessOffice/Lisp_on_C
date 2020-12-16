@@ -1,13 +1,12 @@
 /* --------------------------------------------
 ** Environment: Windows
 ** Author: Ness
-** Date: 2020/12/16 12:16
-** Progress: Chapter 7
+** Progress: Chapter 8
 ** Testcases:
-**     + 5 6
-**     - (* 10 10) (+ 1 1 1)
+**     / 10 0
+**     / 10 2
 -------------------------------------------- */
-const char *lispy_version = "0.0.0.0.3";
+const char *lispy_version = "0.0.0.0.4";
 
 #include <stdio.h>
 #include <string.h>
@@ -15,21 +14,73 @@ const char *lispy_version = "0.0.0.0.3";
 #include "libs/mpc.h"
 #include "util.c"
 
-long eval_op(char *op, long x, long y) {
-    if(strcmp(op, "+") == 0) {return x + y;}
-    if(strcmp(op, "-") == 0) {return x - y;}
-    if(strcmp(op, "*") == 0) {return x * y;}
-    if(strcmp(op, "/") == 0) {return x / y;}
-    return 0;
+typedef enum LVAL_TYPE { LVAL_NUM, LVAL_ERR } LVAL_TYPE;
+typedef enum LVAL_ERR_TYPE { LERR_DIV_ZERO, LERR_BAD_OP, LERR_BAD_NUM } LVAL_ERR_TYPE;
+typedef long LVAL_VAL_TYPE;
+
+typedef struct {
+    LVAL_TYPE type;
+    union {
+        LVAL_VAL_TYPE num;
+        LVAL_ERR_TYPE err;
+    };
+} lval;
+
+/* constructor begin */
+lval lval_num(long x) {
+    lval v;
+    v.type = LVAL_NUM;
+    v.num = x;
+    return v;
+}
+lval lval_err(int x) {
+    lval v;
+    v.type = LVAL_ERR;
+    v.err = x;
+    return v;
+}
+/* constructor end  */
+
+void lval_print(lval v) {
+    switch(v.type) {
+        case LVAL_NUM: printf("%li", v.num); break;
+        case LVAL_ERR:
+            switch(v.err) {
+                case LERR_DIV_ZERO: printf("Error: division by zero!"); break;
+                case LERR_BAD_OP:   printf("Error: Invalid Operator!"); break;
+                case LERR_BAD_NUM:  printf("Error: Invalid Number!");   break;
+            }
+            break;
+    }
+}
+void lval_println(lval v) { lval_print(v); putchar('\n'); }
+
+lval eval_op(char *op, lval x, lval y) {
+    if(x.type == LVAL_ERR) {return x;}
+    if(y.type == LVAL_ERR) {return y;}
+
+    if(strcmp(op, "+") == 0) {return lval_num(x.num + y.num);}
+    if(strcmp(op, "-") == 0) {return lval_num(x.num - y.num);}
+    if(strcmp(op, "*") == 0) {return lval_num(x.num * y.num);}
+    if(strcmp(op, "/") == 0) {
+        return y.num == 0
+            ? lval_err(LERR_DIV_ZERO)
+            : lval_num(x.num / y.num);
+    }
+    return lval_err(LERR_BAD_OP);
 }
 
-long eval(mpc_ast_t *t) {
+lval eval(mpc_ast_t *t) {
     if(strstr(t->tag, "number")) {
-        return atoi(t->contents);
+        errno = 0;
+        long x = strtol(t->contents, NULL, 10);
+        return errno != ERANGE
+            ? lval_num(x)
+            : lval_err(LERR_BAD_NUM);
     }
     /* The operator is always second child. */
     char* op = t->children[1]->contents;
-    long x = eval(t->children[2]);
+    lval x = eval(t->children[2]);
     for(int i = 3;strstr(t->children[i]->tag, "expr");i++) {
         x = eval_op(op, x, eval(t->children[i]));
     }
@@ -59,7 +110,8 @@ int main() {
 
         mpc_result_t r;
         if(mpc_parse("<stdin>", input, Lispy, &r)) {
-            println("%li", eval(r.output));
+            // println("%li", eval(r.output));
+            lval_println(eval(r.output));
             mpc_ast_delete(r.output);
         } else {
             mpc_err_print(r.error);
