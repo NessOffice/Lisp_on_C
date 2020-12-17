@@ -10,6 +10,7 @@ char *readline(char *prompt) {
 
     fputs(prompt, stdout);
     fgets(input_buf, MAX_BUFFER_SIZE, stdin);
+    if(feof(stdin)) {return NULL;}
     char *cpy = malloc(strlen(input_buf)+1);
     strcpy(cpy, input_buf);
     cpy[strlen(cpy)-1] = '\0';
