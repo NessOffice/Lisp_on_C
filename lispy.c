@@ -2,11 +2,11 @@
 ** Copyright (c) 2020, NessOffice
 ** All rights reserved.
 **
-** Environment: Windows, 32-bit
+** Environment: Windows
 ** Author: Ness
-** Progress: Chapter 10
+** Progress: Chapter 11
 -------------------------------------------- */
-const char *lispy_version = "0.0.0.0.6";
+const char *lispy_version = "0.0.0.0.7";
 
 #include <stdio.h>
 #include <string.h>
@@ -25,9 +25,7 @@ int main() {
     mpca_lang(MPCA_LANG_DEFAULT,
   "                                                      \
     number   : /-?[0-9]+/ ;                              \
-    symbol   : \"list\" | \"head\" | \"tail\" | \"join\" \
-             | \"eval\" | \"cons\" | \"len\"             \
-             | '+' | '-' | '*' | '/' ;                   \
+    symbol   : /[a-zA-Z0-9_+\\-*\\/\\\\=<>!&]+/ ;        \
     sexpr    : '(' <expr>* ')' ;                         \
     qexpr    : '{' <expr>* '}' ;                         \
     expr     : <number> | <symbol> | <sexpr> | <qexpr> ; \
@@ -38,13 +36,16 @@ int main() {
     println("Lispy Version %s", lispy_version);
     println("Press ctrl+z to exit\n");
 
+    lenv* e = lenv_new();
+    lenv_add_builtins(e);
+
     while(1) {
         char *input = readline("lispy> ");
         if(input == NULL) {println("Bye."); break;}
 
         mpc_result_t r;
         if(mpc_parse("<stdin>", input, Lispy, &r)) {
-            lval* x = lval_eval(lval_read(r.output));
+            lval* x = lval_eval(e, lval_read(r.output));
             lval_println(x);
             lval_del(x);
             mpc_ast_delete(r.output);

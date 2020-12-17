@@ -1,6 +1,18 @@
+<function>
+5
+<function>
+30
+Error: unbound symbol!
+()
+()
+100
+200
+300
+()
+11
+()
+{a b x y}
+()
 {1 2 3 4}
-{head (list 1 2 3 4)}
-{1}
-{tail tail}
-{6 7}
-3
+Error: Function '+' passed incorrect type for argument 1. Got Q-Expression, Expected Number.
+Error: Function 'head' passed incorrect number of arguments. Got 2, Expected 1.
