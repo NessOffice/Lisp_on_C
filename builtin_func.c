@@ -1,8 +1,5 @@
 #include "ds.c"
 
-lval* lval_eval_sexpr(lenv* e, lval* v);
-lval* lval_pop(lval* v, int i);
-lval* lval_take(lval* v, int i);
 lval* builtin_head(lenv* e, lval* a);
 lval* builtin_tail(lenv* e, lval* a);
 lval* builtin_list(lenv* e, lval* a);
@@ -13,63 +10,6 @@ lval* builtin_len(lenv* e, lval* a);
 lval* lval_join(lval* x, lval* y);
 lval* builtin_op(lenv* e, lval* a, char* op);
 lval* lval_eval(lenv* e, lval *v);
-
-lval *lval_eval_sexpr(lenv* e, lval* v) {
-    for(int i = 0;i < v->count;i++) {
-        v->cell[i] = lval_eval(e, v->cell[i]);
-    }
-
-    for(int i = 0;i < v->count;i++) {
-        if(v->cell[i]->type == LVAL_ERR) {
-            return lval_take(v, i);
-        }
-    }
-
-    /* special judge */
-    if(v->count == 0) {return v;}
-    if(v->count == 1) {return lval_take(v, 0);}
-
-    lval* f = lval_pop(v, 0);
-    if(f->type != LVAL_FUN) {
-        lval_del(f); lval_del(v);
-        return lval_err("first element is not a function");
-    }
-
-    lval* result = f->fun(e, v);
-    lval_del(f);
-    return result;
-}
-lval* lval_pop(lval* v, int i) {
-    lval* x = v->cell[i];
-
-    memmove(&v->cell[i], &v->cell[i+1], sizeof(lval*) * (v->count-i-1));
-    v->count--;
-    v->cell = realloc(v->cell, sizeof(lval*) * v->count);
-    return x;
-}
-lval* lval_take(lval* v, int i) {
-    lval* x = lval_pop(v, i);
-    lval_del(v);
-    return x;
-}
-
-#define LASSERT(args, cond, fmt, ...) \
-    if(!(cond)) { \
-        lval* err = lval_err(fmt, ##__VA_ARGS__); \
-        lval_del(args); \
-        return err; \
-    }
-#define LASSERT_TYPE(func, args, index, expect) \
-  LASSERT(args, args->cell[index]->type == expect, \
-    "Function '%s' passed incorrect type for argument %i. Got %s, Expected %s.", \
-    func, index, ltype_name(args->cell[index]->type), ltype_name(expect))
-#define LASSERT_NUM(func, args, num) \
-  LASSERT(args, args->count == num, \
-    "Function '%s' passed incorrect number of arguments. Got %i, Expected %i.", \
-    func, args->count, num)
-#define LASSERT_NOT_EMPTY(func, args, index) \
-  LASSERT(args, args->cell[index]->count != 0, \
-    "Function '%s' passed {} for argument %i.", func, index);
 
 lval* builtin_head(lenv* e, lval* a) {
     LASSERT_NUM("head", a, 1);
@@ -92,14 +32,6 @@ lval* builtin_tail(lenv* e, lval* a) {
 lval* builtin_list(lenv* e, lval* a) {
     a->type = LVAL_QEXPR;
     return a;
-}
-lval* builtin_eval(lenv* e, lval* a) {
-    LASSERT_NUM("eval", a, 1);
-    LASSERT_TYPE("eval", a, 0, LVAL_QEXPR);
-
-    lval* x = lval_take(a, 0);
-    x->type = LVAL_SEXPR;
-    return lval_eval(e, x);
 }
 lval* builtin_join(lenv* e, lval* a) {
     for(int i = 0;i < a->count;i++) {
@@ -141,12 +73,19 @@ lval* builtin_len(lenv* e,lval* a) {
     lval_del(a);
     return x;
 }
+lval* builtin_eval(lenv* e, lval* a) {
+    LASSERT_NUM("eval", a, 1);
+    LASSERT_TYPE("eval", a, 0, LVAL_QEXPR);
+
+    lval* x = lval_take(a, 0);
+    x->type = LVAL_SEXPR;
+    return lval_eval(e, x);
+}
 lval* builtin_add(lenv* e, lval* a) {return builtin_op(e, a, "+");}
 lval* builtin_sub(lenv* e, lval* a) {return builtin_op(e, a, "-");}
 lval* builtin_mul(lenv* e, lval* a) {return builtin_op(e, a, "*");}
 lval* builtin_div(lenv* e, lval* a) {return builtin_op(e, a, "/");}
 lval* builtin_op(lenv* e, lval* a, char* op) {
-    /* Ensure all arguments are numbers */
     for (int i = 0; i < a->count; i++) {
         LASSERT_TYPE(op, a, i, LVAL_NUM);
     }
@@ -175,32 +114,53 @@ lval* builtin_op(lenv* e, lval* a, char* op) {
   lval_del(a);
   return x;
 }
-
-lval* lval_eval(lenv* e, lval *v) {
-    if(v->type == LVAL_SYM) {
-        lval* x = lenv_get(e, v);
-        lval_del(v);
-        return x;
-    }
-    if(v->type == LVAL_SEXPR) {return lval_eval_sexpr(e, v);}
-    return v;
-}
-
-lval* builtin_def(lenv* e, lval* a) {
+lval* builtin_var(lenv* e, lval* a, char* func) {
     LASSERT_TYPE("def", a, 0, LVAL_QEXPR);
     
     lval* syms = a->cell[0];
     for(int i = 0;i < syms->count;i++) {
         LASSERT(a, syms->cell[i]->type == LVAL_SYM,
-            "Function 'def' can't define non-symbol");
+            "Function '%s' can't define non-symbol. "
+            "Got %s, Expected %s.", func,
+            ltype_name(syms->cell[i]->type),
+            ltype_name(LVAL_SYM));
     }
 
-    LASSERT_NUM("def", a, syms->count+1);
-    
+    LASSERT(a, (syms->count == a->count-1),
+        "Function '%s' passed too many arguments for symbols. "
+        "Got %i, Expected %i.", func, syms->count, a->count-1);
+
+    void(*funp)(lenv*,lval*,lval*);
+    funp = (strcmp(func, "def") == 0 ? lenv_def : lenv_put);
     for(int i = 0;i < syms->count;i++) {
-        lenv_put(e, syms->cell[i], a->cell[i+1]);
+        funp(e, syms->cell[i], a->cell[i+1]);
     }
     lval_del(a);
+    return lval_sexpr();
+}
+lval* builtin_def(lenv* e, lval* a) {return builtin_var(e, a, "def");}
+lval* builtin_put(lenv* e, lval* a) {return builtin_var(e, a, "=");}
+lval* builtin_lambda(lenv* e, lval* a) {
+    LASSERT_NUM("\\", a, 2);
+    LASSERT_TYPE("\\", a, 0, LVAL_QEXPR);
+    LASSERT_TYPE("\\", a, 1, LVAL_QEXPR);
+
+    for (int i = 0; i < a->cell[0]->count; i++) {
+        LASSERT(a, (a->cell[0]->cell[i]->type == LVAL_SYM),
+            "Cannot define non-symbol. Got %s, Expected %s.",
+            ltype_name(a->cell[0]->cell[i]->type),ltype_name(LVAL_SYM));
+    }
+    lval* formals = lval_pop(a, 0);
+    lval* body = lval_pop(a, 0);
+    lval_del(a);
+
+    return lval_lambda(formals, body);
+}
+lval* builtin_locals(lenv* e, lval* a) {
+    for(int i = 0;i < e->count;i++) {
+        printf("%s: ", e->syms[i]);
+        lval_println(e->vals[i]);
+    }
     return lval_sexpr();
 }
 
@@ -225,4 +185,13 @@ void lenv_add_builtins(lenv* e) {
     lenv_add_builtin(e, "/", builtin_div);
 
     lenv_add_builtin(e, "def", builtin_def);
+    lenv_add_builtin(e, "=", builtin_put);
+    lenv_add_builtin(e, "\\", builtin_lambda);
+    lenv_add_builtin(e, "locals", builtin_locals);
+
+    lval* k = lval_sym("help");
+    lval* v = lval_sym("Progress: chapter 10 done");
+    lenv_put(e, k, v);
+    lval_del(k);
+    lval_del(v);
 }

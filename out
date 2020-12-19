@@ -1,18 +1,21 @@
-<function>
-5
-<function>
-30
-Error: unbound symbol!
-()
-()
-100
-200
-300
-()
-11
-()
-{a b x y}
-()
-{1 2 3 4}
-Error: Function '+' passed incorrect type for argument 1. Got Q-Expression, Expected Number.
-Error: Function 'head' passed incorrect number of arguments. Got 2, Expected 1.
+lispy> ()
+lispy> 210
+lispy> (\ {y} {+ x (* x y)})
+lispy> ()
+lispy> 510
+lispy> ()
+lispy> ()
+lispy> 30
+lispy> ()
+lispy> ()
+lispy> ()
+lispy> ()
+lispy> 18
+lispy> {5}
+lispy> ()
+lispy> ()
+lispy> 18
+lispy> 18
+lispy> ()
+lispy> 1
+lispy> Bye.

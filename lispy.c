@@ -4,9 +4,9 @@
 **
 ** Environment: Windows
 ** Author: Ness
-** Progress: Chapter 11
+** Progress: Chapter 12
 -------------------------------------------- */
-const char *lispy_version = "0.0.0.0.7";
+const char *lispy_version = "0.0.0.0.8";
 
 #include <stdio.h>
 #include <string.h>

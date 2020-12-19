@@ -1,18 +1,20 @@
-+
-eval (head {5 10 11 15})
-eval (head {+ - + - * /})
-(eval (head {+ - + - * /})) 10 20
-hello
-def {x} 100
-def {y} 200
-x
-y
-+ x y
-def {a b} 5 6
-+ a b
-def {arglist} {a b x y}
-arglist
-def arglist 1 2 3 4
-list a b x y
-+ 1 {5 6 7}
-head {1 2 3} {4 5 6}
+def {add-mul} (\ {x y} {+ x (* x y)})
+add-mul 10 20
+add-mul 10
+def {add-mul-ten} (add-mul 10)
+add-mul-ten 50
+def {fun} (\ {args body} {def (head args) (\ (tail args) body)})
+fun {add-together x y} {+ x y}
+add-together 10 20
+fun {unpack f xs} {eval (cons f xs)}
+fun {pack f & xs} {f xs}
+def {uncurry} pack
+def {curry} unpack
+curry + {5 6 7}
+uncurry head 5 6 7
+def {add-uncurried} +
+def {add-curried} (curry +)
+add-curried {5 6 7}
+add-uncurried 5 6 7
+fun {head_ a} {eval (head a)}
+head_ {1 2 3}
