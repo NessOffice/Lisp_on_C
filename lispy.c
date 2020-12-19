@@ -4,9 +4,9 @@
 **
 ** Environment: Windows
 ** Author: Ness
-** Progress: Chapter 12
+** Progress: Chapter 13
 -------------------------------------------- */
-const char *lispy_version = "0.0.0.0.8";
+const char *lispy_version = "0.0.0.0.9";
 
 #include <stdio.h>
 #include <string.h>
@@ -23,15 +23,15 @@ int main() {
     mpc_parser_t* Lispy    = mpc_new("lispy");
 
     mpca_lang(MPCA_LANG_DEFAULT,
-  "                                                      \
-    number   : /-?[0-9]+/ ;                              \
-    symbol   : /[a-zA-Z0-9_+\\-*\\/\\\\=<>!&]+/ ;        \
-    sexpr    : '(' <expr>* ')' ;                         \
-    qexpr    : '{' <expr>* '}' ;                         \
-    expr     : <number> | <symbol> | <sexpr> | <qexpr> ; \
-    lispy    : /^/ <expr>* /$/ ;                         \
-  ",
-  Number, Symbol, Sexpr, Qexpr, Expr, Lispy);
+    "                                                        \
+        number   : /-?[0-9]+/ ;                              \
+        symbol   : /[a-zA-Z0-9_+\\-*\\/\\\\%=<>!&]+/ ;       \
+        sexpr    : '(' <expr>* ')' ;                         \
+        qexpr    : '{' <expr>* '}' ;                         \
+        expr     : <number> | <symbol> | <sexpr> | <qexpr> ; \
+        lispy    : /^/ <expr>* /$/ ;                         \
+    ",
+    Number, Symbol, Sexpr, Qexpr, Expr, Lispy);
 
     println("Lispy Version %s", lispy_version);
     println("Press ctrl+z to exit\n");

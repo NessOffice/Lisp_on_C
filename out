@@ -1,21 +1,6 @@
 lispy> ()
-lispy> 210
-lispy> (\ {y} {+ x (* x y)})
 lispy> ()
-lispy> 510
+lispy> {9 7 5 3 1}
 lispy> ()
-lispy> ()
-lispy> 30
-lispy> ()
-lispy> ()
-lispy> ()
-lispy> ()
-lispy> 18
-lispy> {5}
-lispy> ()
-lispy> ()
-lispy> 18
-lispy> 18
-lispy> ()
-lispy> 1
+lispy> 5
 lispy> Bye.

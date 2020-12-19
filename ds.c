@@ -58,6 +58,7 @@ lval *lval_qexpr();
 lval* lval_fun(lbuiltin func);
 lval* lval_lambda(lval* formals, lval* body);
 lval* lval_copy(lval* v);
+int lval_eq(lval* x, lval* y);
 void lval_del(lval *v);
 
 /* construct lval from mpt_ast_t */
@@ -67,6 +68,7 @@ lval *lval_read(mpc_ast_t* t);
 lval *lval_add(lval* v, lval* x);
 lval* lval_pop(lval* v, int i); // get i-th element and drop it from the list
 lval* lval_take(lval* v, int i); // get i-th element, and drop others
+lval* lval_join(lval* x, lval* y);
 
 void lval_expr_print(lval* v, char open, char close);
 void lval_print(lval* v);
@@ -181,6 +183,32 @@ lval* lval_copy(lval* v) {
     }
     return x;
 }
+int lval_eq(lval* x, lval* y) {
+    if(x->type != y->type) {return 0;}
+    switch(x->type)
+    {
+        case LVAL_NUM: return (x->num == y->num);
+        case LVAL_ERR: return (strcmp(x->err, y->err) == 0);
+        case LVAL_SYM: return (strcmp(x->sym, y->sym) == 0);
+        case LVAL_FUN:
+            if(x->builtin || y->builtin) {
+                return (x->builtin == y->builtin);
+            } else {
+                return lval_eq(x->formals, y->formals)
+                    && lval_eq(x->body, y->body);
+            }
+        case LVAL_QEXPR:
+        case LVAL_SEXPR:
+            if(x->count != y->count) {return 0;}
+            for(int i = 0;i < x->count;i++) {
+                if(!lval_eq(x->cell[i], y->cell[i])) {return 0;}
+            }
+            return 1;
+        default:
+            break;
+    }
+    return 0;
+}
 void lval_del(lval *v) {
     switch(v->type) {
         case LVAL_NUM: break;
@@ -249,6 +277,13 @@ lval* lval_pop(lval* v, int i) {
 lval* lval_take(lval* v, int i) {
     lval* x = lval_pop(v, i);
     lval_del(v);
+    return x;
+}
+lval* lval_join(lval* x, lval* y) {
+    while(y->count) {
+        x = lval_add(x, lval_pop(y, 0));
+    }
+    lval_del(y);
     return x;
 }
 
