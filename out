@@ -1,6 +1,4 @@
-lispy> ()
-lispy> ()
-lispy> {9 7 5 3 1}
-lispy> ()
-lispy> 5
+lispy> "Hello, World!" 
+()
+lispy> {1}
 lispy> Bye.

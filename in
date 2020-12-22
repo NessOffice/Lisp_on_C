@@ -1,5 +1,2 @@
-def {fun} (\ {args body} {def (head args) (\ (tail args) body)})
-(fun {reverse l} {   if (== l {})     {{}}     {join (reverse (tail l)) (head l)} })
-reverse {1 3 5 7 9}
-(fun {len_ l} {   if (== l {})     {0}     {+ 1 (len_ (tail l))} })
-len_ {1 3 5 7 9}
+load "lstl/test.lspy"
+head {1 2 3}

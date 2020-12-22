@@ -1,0 +1,9 @@
+(def {fun}
+    (\ {args body} 
+        {def (head args) 
+            (\ (tail args) body)
+        }
+    )
+)
+(fun {head_ x} {head x})
+(print "Hello, World!")
