@@ -4,7 +4,7 @@
 **
 ** Environment: Windows
 ** Author: Ness
-** Progress: Chapter 14
+** Progress: Chapter 15
 -------------------------------------------- */
 const char *lispy_version = "0.0.0.1.0";
 
@@ -43,6 +43,11 @@ int main() {
 
     lenv* e = lenv_new();
     lenv_add_builtins(e);
+
+    lval* a = lval_sexpr();
+    lval_add(a, lval_str("lstd/prelude.lspy"));
+    lval* x = builtin_load(e, a);
+    lval_del(x);
 
     while(1) {
         char *input = readline("lispy> ");

@@ -1,0 +1,19 @@
+; Function Definitions
+(def {fun}
+    (\ {args body} 
+        {def (head args) 
+            (\ (tail args) body)
+        }
+    )
+)
+; Unpack List for Function
+(fun {unpack f l} {
+  eval (cons f l)
+})
+
+; Pack List for Function
+(fun {pack f & xs} {f xs})
+
+; Curried and Uncurried calling
+(def {curry} unpack)
+(def {uncurry} pack)

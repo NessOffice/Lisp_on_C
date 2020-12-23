@@ -1,0 +1,4 @@
+(load "lstd/func.lspy")
+(load "lstd/misc.lspy")
+(load "lstd/list.lspy")
+(load "lstd/cond.lspy")

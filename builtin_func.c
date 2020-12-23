@@ -5,7 +5,6 @@ lval* builtin_tail(lenv* e, lval* a);
 lval* builtin_list(lenv* e, lval* a);
 lval* builtin_join(lenv* e, lval* a);
 lval* builtin_cons(lenv* e, lval* a);
-lval* builtin_len(lenv* e, lval* a);
 lval* builtin_eval(lenv* e, lval* a); // QEXPR -> eval(SEXPR)
 lval* builtin_arithmetic(lenv* e, lval* a, char* op); // +-*/%
 lval* builtin_ord(lenv* e, lval* a, char* op); // < > <= >= for number
@@ -67,14 +66,6 @@ lval* builtin_cons(lenv* e, lval* a) {
     y->cell[0] = x;
     lval_del(a);
     return y;
-}
-lval* builtin_len(lenv* e,lval* a) {
-    LASSERT_NUM("len", a, 1);
-    LASSERT_TYPE("len", a, 0, LVAL_QEXPR);
-    
-    lval* x = lval_num(a->cell[0]->count);
-    lval_del(a);
-    return x;
 }
 lval* builtin_eval(lenv* e, lval* a) {
     LASSERT_NUM("eval", a, 1);
@@ -277,7 +268,6 @@ void lenv_add_builtins(lenv* e) {
     lenv_add_builtin(e, "eval", builtin_eval);
     lenv_add_builtin(e, "join", builtin_join);
     lenv_add_builtin(e, "cons", builtin_cons);
-    lenv_add_builtin(e, "len", builtin_len);
 
     lenv_add_builtin(e, "+", builtin_add);
     lenv_add_builtin(e, "-", builtin_sub);

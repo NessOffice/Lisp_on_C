@@ -1,0 +1,56 @@
+; First, Second, or Third Item in List
+(fun {fst l} { eval (head l) })
+(fun {snd l} { eval (head (tail l)) })
+(fun {trd l} { eval (head (tail (tail l))) })
+
+; Nth item in List
+(fun {nth n l} {
+  if (== n 0)
+    {fst l}
+    {nth (- n 1) (tail l)}
+})
+
+; Last item in List
+(fun {last l} {nth (- (len l) 1) l})
+
+; Take N items
+(fun {take n l} {
+    if (== n 0)
+        {nil}
+        {join (head l) (take (- n 1) (tail l))}
+})
+
+; Drop N items
+(fun {drop n l} {
+    if (== n 0)
+        {l}
+        {drop (- n 1) (tail l)}
+})
+
+; Split at N
+(fun {split n l} {list (take n l) (drop n l)})
+
+; Apply Function to List
+(fun {map f l} {
+    if (== l nil)
+        {nil}
+        {cons (f (fst l)) (map f (tail l))}
+})
+
+; Apply Filter to List
+(fun {filter f l} {
+    if (== l nil)
+        {nil}
+        {join (if (f (fst l)) {head l} {nil}) (filter f (tail l))}
+})
+
+; Fold Left
+(fun {foldl f z l} {
+    if (== l nil)
+        {z}
+        {foldl f (f z (fst l)) (tail l)}
+})
+(fun {sum l} {foldl + 0 l})
+(fun {prod l} {foldl * 1 l})
+(fun {len l} {foldl (\ {x _} {+ x 1}) 1 l})
+(fun {elem x l} {foldl (\ {a b} {if a {a} {== b x}}) false l})
